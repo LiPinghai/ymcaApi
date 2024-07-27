@@ -28,16 +28,33 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     
     return distance
 
+def format_canadian_postal_code(postal_code):
+    # Remove any existing spaces
+    postal_code = postal_code.replace(" ", "")
+    # Convert to uppercase
+    postal_code = postal_code.upper()
+    # Insert a space after the third character if the length is correct
+    if len(postal_code) == 6:
+        formatted_code = postal_code[:3] + " " + postal_code[3:]
+    else:
+        formatted_code = postal_code  
+    return formatted_code
+
 
 @app.route('/nearest_daycares', methods=['GET'])
 def nearest_daycares():
-    postal_code = request.args.get('postal_code')
+
+    postal_code = format_canadian_postal_code(request.args.get('postal_code'))
+
     max_locations = int(request.args.get('max', 5))
     
     if not postal_code:
         return jsonify({"error": "Postal code is required"}), 400
     
-    user_location = postal_codes[postal_code]
+    try:
+        user_location = postal_codes[postal_code]
+    except ValueError as e:
+        return jsonify({"error": "Invalid postal code"}), 400
 
     if not user_location:
         return jsonify({"error": "Invalid postal code"}), 400
@@ -55,7 +72,10 @@ def nearest_daycares():
     result = ', '.join(f"{row['daycare_location']}({row['distance']:.1f}km)" 
                        for _, row in nearest_daycares.iterrows())
     
-    return jsonify({"nearest_daycares": result})
+    return jsonify({
+        "coordinate": f"{user_location.latitude}, {user_location.longitude}",
+        "nearest_daycares": result
+        })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=4000)
