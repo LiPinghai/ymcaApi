@@ -69,8 +69,8 @@ def nearest_daycares():
     nearest_daycares = daycare_data.nsmallest(max_locations, 'distance')
     
     # Format the output
-    result = ', '.join(f"{row['daycare_location']}({row['distance']:.1f}km)" 
-                       for _, row in nearest_daycares.iterrows())
+    result = [{'daycare_location': row['daycare_location'], 'distance': round(row['distance'], 2)} 
+          for _, row in nearest_daycares.iterrows()]
     
     return jsonify({
         "coordinate": f"{user_location.latitude}, {user_location.longitude}",
